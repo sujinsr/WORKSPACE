@@ -47,6 +47,46 @@ void* lc_malloc(unsigned long size)
     return alloc;
 }
 
+void * lc_calloc(unsigned long count, unsigned long size)
+{
+    unsigned long totalSize;
+    void *memPtr = calloc(count, size);
+    if (memPtr != NULL) {
+        totalSize = count * size;
+        add_meminfo(memPtr, totalSize);
+    }
+    return memPtr;
+}
+
+void * lc_realloc(void *addr, unsigned long size)
+{
+    void *memPtr;
+    
+    memPtr = realloc(addr, size);
+    if (memPtr != NULL) {
+        if (addr == NULL) {
+            add_meminfo(memPtr, size);
+        }
+        else {
+            rem_meminfo(addr);
+            add_meminfo(memPtr, size);
+        }
+    }
+    return memPtr;
+}
+
+char * lc_strdup(const char *str)
+{
+    char *ret_str;
+    unsigned long str_size = strlen(str) + 1;
+    
+    ret_str = strdup(str);
+    if (ret_str != NULL) {
+        add_meminfo(ret_str, str_size);
+    }
+    return ret_str;
+}
+
 void lc_free(void *addr) 
 {
     rem_meminfo(addr);
@@ -75,21 +115,6 @@ void rem_meminfo(void *alloc)
     pthread_mutex_unlock(&mem_handle);
 }
 
-void display_leakinfo() 
-{
-    memLeak *memlist = mem_start;
-    
-    printf("-----------------------------MEMORY LEAK----------------------------------------\n");
-    
-    while(memlist != NULL)
-    {
-        printf("Address : %p    size : %ld bytes\n", memlist->mem_info.address, memlist->mem_info.size);
-        memlist = memlist->next;
-    }
-    printf("---------------------------------------------------------------------------------\n");
-    
-    pthread_mutex_destroy(&mem_handle);
-}
 
 void add(memInfo mem_alloc)
 {
@@ -144,4 +169,18 @@ void rem(void *memAddr)
 }
 
 
-
+void display_leakinfo() 
+{
+    memLeak *memlist = mem_start;
+    
+    printf("-----------------------------MEMORY LEAK----------------------------------------\n");
+    
+    while(memlist != NULL)
+    {
+        printf("Address : %p    size : %ld bytes\n", memlist->mem_info.address, memlist->mem_info.size);
+        memlist = memlist->next;
+    }
+    printf("---------------------------------------------------------------------------------\n");
+    
+    pthread_mutex_destroy(&mem_handle);
+}
