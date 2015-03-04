@@ -37,7 +37,7 @@ int main(int argc, char **argv)
                     cmdOptions.opts |= OPTION_SHM;
                 else if ( !strcmp(optarg, "sem") )
                     cmdOptions.opts |= OPTION_SEM;
-                else if ( !strcmp(optarg, "msg") )
+                else if ( !strcmp(optarg, "msq") )
                     cmdOptions.opts |= OPTION_MSG;
                 else
                     cmdOptions.opts |= OPTION_ALL;
@@ -59,11 +59,10 @@ int main(int argc, char **argv)
         }
         
     }
-    
 
     read_sysvipc(&cmdOptions);
+    display_sysvipc(&cmdOptions);
     
-
     return 0;
 }
 

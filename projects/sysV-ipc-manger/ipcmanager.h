@@ -8,10 +8,9 @@
 #define OPTION_DAYS     0x0010      /* Reserved for future use */
 #define OPTION_MANAGER  0x0020      /* Reserved for future use */
 
-typedef struct
-{
+typedef struct {
     unsigned int    opts;
     int             days;
-}Cmdarg;
+} Cmdarg;
 
 #endif
