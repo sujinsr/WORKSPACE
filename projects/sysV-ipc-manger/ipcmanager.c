@@ -15,18 +15,8 @@ int main(int argc, char **argv)
      unsigned int   options;
      Cmdarg         cmdOptions = {0, 0};
      int            c = 0;
-     
-#if 0
-    /* check program is running in root user. This is a bad idea even to clean
-     * ipc resource in previlege mode give more secure */
-    if ( getuid() ) {
-        fprintf(stderr, "Run program as root user.\n");
-        return 1;
-    }
-    printf("root user.\n");
-#endif
 
-    while ( (c = getopt(argc, argv, "S:M:d:")) != -1)
+    while ( (c = getopt(argc, argv, "S:M:d:a")) != -1)
     {
         switch (c)
         {
@@ -47,7 +37,11 @@ int main(int argc, char **argv)
                 cmdOptions.opts |= OPTION_DAYS;
                 cmdOptions.days = atoi(optarg);
                 break;
-            
+                
+            case 'a':
+                cmdOptions.opts |= OPTION_NOAUTH;
+                break;
+                
             case 'h':
             case '?':
                 usage();
@@ -62,6 +56,20 @@ int main(int argc, char **argv)
 
     read_sysvipc(&cmdOptions);
     display_sysvipc(&cmdOptions);
+    
+#if 0
+    /* check program is running in root user. This is a bad idea even to clean
+     * ipc resource in previlege mode give more secure */
+    if ( getuid() ) {
+        fprintf(stderr, "Run program as root user.\n");
+        return 1;
+    }
+    printf("root user.\n");
+#endif
+
+    if (cmdOptions.opts & OPTION_MANAGER) {
+        remove_sysvipc(&cmdOptions);
+    }
     
     return 0;
 }

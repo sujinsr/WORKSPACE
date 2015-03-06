@@ -7,6 +7,7 @@
 #define OPTION_ALL      0x0008      /* Process on all 3 IPC */
 #define OPTION_DAYS     0x0010      /* Reserved for future use */
 #define OPTION_MANAGER  0x0020      /* Reserved for future use */
+#define OPTION_NOAUTH   0x0040      /* No authentication requried when delete IPC */
 
 typedef struct {
     unsigned int    opts;

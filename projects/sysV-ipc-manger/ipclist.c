@@ -16,7 +16,9 @@ static Ipclist * create_node(int id, const void *ipc_ds, Listtype type);
 static void display_shm(int shmid, struct shmid_ds *shm);
 static void display_sem(int semid, struct semid_ds *sem);
 static void display_msq(int msqid, struct msqid_ds *msq);
-
+static int remove_shm(int shmid, struct shmid_ds *shm, int noauth);
+static int remove_sem(int semid, struct semid_ds *sem, int noauth);
+static int remove_msq(int msqid, struct msqid_ds *msq, int noauth);
 
 static Ipclist * create_node(int id, const void * ipc_ds, Listtype type)
 {
@@ -92,8 +94,7 @@ void display_list(Listtype type, Ipclist *list)
     struct shmid_ds *shmnode = NULL;
     struct semid_ds *semnode = NULL;
     struct msqid_ds *msqnode = NULL;
-    int count = 0;
-    
+
     while (list != NULL)
     {
         if (type == SHM_TYPE) {
@@ -109,8 +110,78 @@ void display_list(Listtype type, Ipclist *list)
             display_msq(list->ipcid, msqnode);
         }
         list = list->next;
-        count ++;
     }
 }
 
+static int remove_shm(int shmid, struct shmid_ds *shm, int noauth)
+{
+    char yn;
+    if (!noauth) {
+        printf("Do you want to remove  shared memory id - %d\n \t(y/n)? ", shmid);
+        scanf(" %c", &yn);
+        if (yn != 'y') {
+            printf("do not remove shm\n");
+            return 1;
+        }
 
+    }
+    printf("remove shm\n");
+    return 0;
+}
+
+static int remove_sem(int semid, struct semid_ds *sem, int noauth)
+{
+    char yn = 0;
+    if (!noauth) {
+        printf("Do you want to remove semaphore id - %d\n", semid);
+        scanf("%c", &yn);
+        if (yn != 'y' || yn != 'Y')
+            return 1;
+    }
+    printf("remove sem\n");
+    return 0;
+}
+
+static int remove_msq(int msqid, struct msqid_ds *msq, int noauth)
+{
+    char yn = 0;
+    if (!noauth) {
+        printf("Do you want to remove message queue id - %d\n", msqid);
+        scanf("%c", &yn);
+        if (yn != 'y' || yn != 'Y')
+            return 1;
+    }
+    printf("remove msq\n");
+    return 0;
+}
+
+void list_remove(Ipclist *list, const Cmdarg *cmdOpts, Listtype type)
+{
+    struct shmid_ds *shm = NULL;
+    struct semid_ds *sem = NULL;
+    struct msqid_ds *msq = NULL;
+    int noauth = 0;
+    Ipclist *delnode = NULL;
+    
+    noauth = cmdOpts->opts & OPTION_NOAUTH;
+    
+    while (list != NULL)
+    {
+        if (type == SHM_TYPE) {
+            shm = list->data;
+            remove_shm(list->ipcid, shm, noauth);
+        }
+        else if (type == SEM_TYPE) {
+            sem = list->data;
+            remove_sem(list->ipcid, sem, noauth);
+        }
+        else {
+            msq = list->data;
+            remove_msq(list->ipcid, msq, noauth);
+        }
+        delnode = list;
+        list = list->next;
+        free(delnode->data);
+        free(delnode);
+    }
+}

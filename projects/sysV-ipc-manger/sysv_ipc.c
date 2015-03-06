@@ -14,6 +14,9 @@ static int load_msg();
 static void display_shm();
 static void display_sem();
 static void display_msq();
+static int remove_shm(const Cmdarg *cmdOpts);
+static int remove_sem(const Cmdarg *cmdOpts);
+static int remove_msq(const Cmdarg *cmdOpts);
 
 /* static list variable declartion */
 static Ipclist *shmlist_start, *shmlist_end;
@@ -134,7 +137,7 @@ static void display_msq()
     printf("\n\n");
 }
 
-void display_sysvipc( const Cmdarg *cmdOpts)
+void display_sysvipc( const Cmdarg *cmdOpts )
 {
     if (cmdOpts->opts & OPTION_SHM) {
         display_shm();    
@@ -151,6 +154,40 @@ void display_sysvipc( const Cmdarg *cmdOpts)
         display_msq();
     }
 }
+
+static int remove_shm(const Cmdarg *cmdOpts)
+{
+    list_remove(shmlist_start, cmdOpts, SHM_TYPE);
+}
+
+static int remove_sem(const Cmdarg *cmdOpts)
+{
+    list_remove(semlist_start, cmdOpts, SEM_TYPE);
+}
+
+static int remove_msq(const Cmdarg *cmdOpts)
+{
+    list_remove(msqlist_start, cmdOpts, MSG_TYPE);
+}
+
+void remove_sysvipc( const Cmdarg *cmdOpts )
+{
+    if (cmdOpts->opts & OPTION_SHM) {
+        remove_shm(cmdOpts);
+    }
+    else if (cmdOpts->opts & OPTION_SEM) {
+        remove_sem(cmdOpts);
+    }
+    else if (cmdOpts->opts & OPTION_MSG) {
+        remove_msq(cmdOpts);
+    }
+    else {
+        remove_shm(cmdOpts);
+        remove_sem(cmdOpts);
+        remove_msq(cmdOpts);
+    }
+}
+
 
 
 

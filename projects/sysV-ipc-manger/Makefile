@@ -15,5 +15,9 @@ sysv_ipc.o: sysv_ipc.c
 ipclist.o: ipclist.c
 	$(CC) -c ipclist.c
 
+install:
+	mkdir -p $(HOME)/bin
+	cp ./ipcm $(HOME)/bin/
+	
 clean:
 	rm *.o ipcm

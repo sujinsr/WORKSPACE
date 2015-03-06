@@ -5,6 +5,7 @@
 
 void read_sysvipc( const Cmdarg *cmdOpts);
 void display_sysvipc( const Cmdarg *cmdOpts);
+void remove_sysvipc( const Cmdarg *cmdOptions);
 
 
 typedef enum _Listtype {
