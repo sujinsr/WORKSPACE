@@ -49,8 +49,8 @@ static int load_shm()
     for (i = 1; i <= shmCount; i++)
     {
         shmid = shmctl(i, SHM_STAT, &shmds);
-        addto_list(shmid, &shmds, SHM_TYPE, &shmlist_start, &shmlist_end);
-        //printf("add %d\n", i);
+		if (shmid > 0)
+        	addto_list(shmid, &shmds, SHM_TYPE, &shmlist_start, &shmlist_end);
     }
     
     return 0;
@@ -72,7 +72,8 @@ static int load_sem()
     for (i = 1; i <= semCount; i++)
     {
         semid = semctl(i, 0, SEM_STAT, semopts);
-        addto_list(semid, &semds, SEM_TYPE, &semlist_start, &semlist_end);
+		if (semid > 0)
+        	addto_list(semid, &semds, SEM_TYPE, &semlist_start, &semlist_end);
     }
     return 0;
 }
@@ -90,7 +91,8 @@ static int load_msg()
     for (i = 1;  i <= msqCount; i++)
     {
         msqid = msgctl(i, MSG_STAT, &msqds);
-        addto_list(msqid, &msqds, MSG_TYPE, &msqlist_start, &msqlist_end);
+		if (msqid > 0)
+        	addto_list(msqid, &msqds, MSG_TYPE, &msqlist_start, &msqlist_end);
     }
     return 0;
 }
@@ -116,7 +118,7 @@ void read_sysvipc( const Cmdarg *cmdOpts)
 static void display_shm()
 {
     printf("----- IPC Sharedmemory Segments -----\n");
-    printf("shmid       key             size        nattach    \n");
+    printf("key		id		size	nattach	  owner	  mode	cpid	lpid\n");
     display_list(SHM_TYPE, shmlist_start);
     printf("\n\n");
 }

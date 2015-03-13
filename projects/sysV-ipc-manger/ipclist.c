@@ -7,6 +7,8 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include "sysv_ipc.h"
 #include "ipclist.h"
@@ -19,6 +21,7 @@ static void display_msq(int msqid, struct msqid_ds *msq);
 static int remove_shm(int shmid, struct shmid_ds *shm, int noauth);
 static int remove_sem(int semid, struct semid_ds *sem, int noauth);
 static int remove_msq(int msqid, struct msqid_ds *msq, int noauth);
+static char *getname(uid_t uid);
 
 static Ipclist * create_node(int id, const void * ipc_ds, Listtype type)
 {
@@ -71,10 +74,23 @@ void addto_list(int id, const void * ipc_ds, Listtype type , Ipclist **list_star
         return;
 }
 
+static char *getname(uid_t uid)
+{
+	struct passwd * user_entry;
+	user_entry = getpwuid(uid);
+	return user_entry->pw_name;
+}
+
 static void display_shm(int shmid, struct shmid_ds *shm)
 {
-    printf("%d      0x%x        %zd         %d\n", 
-                shmid, shm->shm_perm.__key, shm->shm_segsz, (int)shm->shm_nattch);
+	char *			user;
+	key_t			key = shm->shm_perm.__key;
+	unsigned short	perm = shm->shm_perm.mode & 511; //9 least significant bit for mode
+
+	user = getname(shm->shm_perm.uid); 
+	
+	printf("0x%08x	%d		%zd	   %d	   %s	  %o	%d	%d\n", key, shmid, shm->shm_segsz, 
+				(int)shm->shm_nattch, user, perm, (int)shm->shm_cpid, (int)shm->shm_lpid);	
 }
 
 static void display_sem(int semid, struct semid_ds *sem)
