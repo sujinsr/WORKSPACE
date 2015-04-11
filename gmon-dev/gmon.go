@@ -1,11 +1,7 @@
 package main
 
-import (
-	"fmt"
-)
-
 func main() {
-	var choice int8
+	/*var choice int8
 
 	fmt.Println("1 - Memory Information")
 	fmt.Println("2 - CPU Stat\n")
@@ -17,5 +13,7 @@ func main() {
 		case 1: memstat()
 		case 2: cpustat()
 		default: fmt.Println("Unknow choice")
-	}
+	}*/
+
+	cpustat()
 }
