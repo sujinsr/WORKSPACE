@@ -19,6 +19,8 @@ func main() {
 		memstat()
 	case "c", "cpu":
 		cpustat()
+	case "d", "disk":
+		diskstat()
 	default:
 		fmt.Println("Invalid Arguments")
 	}
