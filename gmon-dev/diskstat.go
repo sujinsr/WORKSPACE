@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	ui "github.com/gizak/termui"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -58,30 +59,76 @@ func getDiskstat() (stat []statIO) {
 }
 
 func diskstat() {
-	fmt.Println("I am from disk stat")
-	var r1, r2, w1, w2 uint64
-
-	stat1 := getDiskstat()
-	for _, v := range stat1 {
-		fmt.Println("read", v.ReadBytes, "write", v.WriteBytes)
-
-		r1 += v.ReadBytes
-		w1 += v.WriteBytes
+	err := ui.Init()
+	if err != nil {
+		panic(err)
 	}
-	fmt.Println("read", r1, "write", w1)
-	fmt.Printf("\n\n")
+	defer ui.Close()
 
-	time.Sleep(3 * time.Second)
+	ui.UseTheme("helloworld")
 
-	stat2 := getDiskstat()
-	for _, v1 := range stat2 {
-		fmt.Println("read", v1.ReadBytes, "write", v1.WriteBytes)
+	par0 := ui.NewPar("Disk IO Stats")
+	par0.Height = 1
+	par0.Width = 50
+	par0.X = 20
+	par0.Y = 1
+	par0.HasBorder = false
 
-		r2 += v1.ReadBytes
-		w2 += v1.WriteBytes
+	par1 := ui.NewPar("          0 kb/s ")
+	par1.Height = 3
+	par1.Width = 50
+	par1.Y = 3
+	par1.Border.Label = "Total Reads"
+	par1.Border.FgColor = ui.ColorYellow
+
+	par2 := ui.NewPar("          0 mb/s")
+	par2.Height = 3
+	par2.Width = 50
+	par2.Y = 6
+	par2.Border.Label = "Total Writes"
+	par2.Border.FgColor = ui.ColorYellow
+
+	draw := func() {
+		ui.Render(par0, par1, par2)
 	}
-	fmt.Println("read", r2, "write", w2)
 
-	fmt.Println((r2-r1)/1024, "kb/3s Read")
-	fmt.Println((w2-w1)/1024, "kb/3s Write")
+	evt := ui.EventCh()
+
+	var prev_read, prev_write, cur_read, cur_write uint64
+
+	stat := getDiskstat()
+	for _, v := range stat {
+		prev_read += v.ReadBytes
+		prev_write += v.WriteBytes
+	}
+
+	for {
+		select {
+		case e := <-evt:
+			if e.Type == ui.EventKey && e.Ch == 'q' {
+				return
+			}
+		default:
+			time.Sleep(1 * time.Second)
+
+			stat = getDiskstat()
+			for _, v := range stat {
+				cur_read += v.ReadBytes
+				cur_write += v.WriteBytes
+			}
+			read_text := fmt.Sprintf("     %d kb / s", (cur_read-prev_read)/1024)
+			write_text := fmt.Sprintf("     %d kb / s", (cur_write-prev_write)/1024)
+			//read_text := strconv.Itoa(int((cur_read-prev_read)/1024)) + " Kb / s"
+			//write_text := strconv.Itoa(int((cur_write-prev_write)/1024)) + " Kb / s"
+			prev_read = cur_read
+			prev_write = cur_write
+			cur_read, cur_write = 0, 0
+
+			par1.Text = read_text
+			par2.Text = write_text
+
+			draw()
+		}
+
+	}
 }
