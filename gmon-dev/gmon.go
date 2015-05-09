@@ -21,6 +21,9 @@ func main() {
 		cpustat()
 	case "d", "disk":
 		diskstat()
+	case "u":
+		uptime()
+
 	default:
 		fmt.Println("Invalid Arguments")
 	}
