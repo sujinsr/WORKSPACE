@@ -23,17 +23,18 @@ func clientSender(conn net.Conn) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		message, _ := reader.ReadBytes('\n')
+
 		//fmt.Println("I am going to send->", message)
 		conn.Write(message[0 : len(message)-1])
 	}
 }
 
 func clientReceiver(conn net.Conn) {
-	message := make([]byte, 1024)
+	msg := make([]byte, 1024)
 	for {
-		_, err := conn.Read(message)
+		n, err := conn.Read(msg)
 		errorCheck(err, "Read error")
-		fmt.Println("[$", string(message))
+		fmt.Println("[$", string(msg[:n]))
 	}
 }
 

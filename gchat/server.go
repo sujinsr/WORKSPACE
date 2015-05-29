@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 )
 
 type ClientProp struct {
@@ -31,43 +32,55 @@ func Log(v ...interface{}) {
 }
 
 func clientHandler(conn net.Conn, ch_msg chan string, l *list.List) {
+	var stop bool = false
+
 	/*Read name for the connection */
 	buf := make([]byte, 1024)
 	n, _ := conn.Read(buf)
 	/* Convert byte array to string */
 	name := string(buf[:n])
+
 	/* Add to client list*/
 	newclient := &ClientProp{name, conn}
 	l.PushBack(*newclient)
 
 	ch_msg <- name + " joined to chat"
 
-	go clientReceiver(conn, ch_msg, l)
-}
-
-func clientReceiver(conn net.Conn, ch_msg chan string, l *list.List) {
-	message := make([]byte, 1024)
-	var stop bool = false
-
+	/* Receive messages continuously untill connection is active */
 	for !stop {
-		_, err := conn.Read(message)
+		n2, err := conn.Read(buf)
+
 		if err != nil {
 			stop = true
 			continue
 		}
-		ch_msg <- string(message)
+		msg := name + ":" + string(buf[:n2])
+		//Log(name + " sending->" + msg)
+		ch_msg <- msg
 	}
+	removeClient(l, name)
 	fmt.Println("Closing the Client Connection")
 	conn.Close()
+}
 
+func removeClient(l *list.List, name string) {
+	for val := l.Front(); val != nil; val = val.Next() {
+		client := val.Value.(ClientProp)
+		if client.Name == name {
+			l.Remove(val)
+			Log("Client " + name + "removed from Client List")
+
+		}
+	}
 }
 
 func allClientSend(ch_msg chan string, l *list.List) {
 	for {
 		msg := <-ch_msg
+
 		for val := l.Front(); val != nil; val = val.Next() {
 			client := val.Value.(ClientProp)
-			Log("send-> " + msg)
+			Log("send-> " + msg + " L" + strconv.Itoa(len(msg)))
 			client.Conn.Write([]byte(msg))
 		}
 	}
@@ -92,3 +105,19 @@ func main() {
 	}
 
 }
+
+/*func clientReceiver(conn net.Conn, ch_msg chan string, l *list.List) {
+	var stop bool = false
+	message := make([]byte, 1024)
+
+	for !stop {
+		_, err := conn.Read(message)
+		if err != nil {
+			stop = true
+			continue
+		}
+		ch_msg <- string(message)
+	}
+	fmt.Println("Closing the Client Connection")
+	conn.Close()
+}*/
