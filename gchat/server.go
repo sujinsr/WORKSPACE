@@ -3,6 +3,7 @@ package main
 import (
 	"container/list"
 	"fmt"
+	"log"
 	"net"
 	"os"
 )
@@ -12,29 +13,53 @@ type ClientProp struct {
 	Conn net.Conn
 }
 
+var (
+	debug bool = true
+)
+
 func errorCheck(err error, errStr string) {
 	if err != nil {
-		fmt.Println(errStr)
+		fmt.Println(err, errStr)
 		os.Exit(-1)
 	}
 }
 
-func clientReceiver(conn net.Conn, ch_msg chan string) {
-	message := make([]byte, 1024)
-	for {
-		_, err := conn.Read(message)
-		errorCheck(err, "Read error")
-		ch_msg <- string(message)
-		//fmt.Println(">>", string(message))
+func Log(v ...interface{}) {
+	if debug == true {
+		log.Print(v)
 	}
 }
 
 func clientHandler(conn net.Conn, ch_msg chan string, l *list.List) {
-	/* get name */
-	newclient := &ClientProp{"TestName", conn}
-
-	go clientReceiver(conn, ch_msg)
+	/*Read name for the connection */
+	buf := make([]byte, 1024)
+	n, _ := conn.Read(buf)
+	/* Convert byte array to string */
+	name := string(buf[:n])
+	/* Add to client list*/
+	newclient := &ClientProp{name, conn}
 	l.PushBack(*newclient)
+
+	ch_msg <- name + " joined to chat"
+
+	go clientReceiver(conn, ch_msg, l)
+}
+
+func clientReceiver(conn net.Conn, ch_msg chan string, l *list.List) {
+	message := make([]byte, 1024)
+	var stop bool = false
+
+	for !stop {
+		_, err := conn.Read(message)
+		if err != nil {
+			stop = true
+			continue
+		}
+		ch_msg <- string(message)
+	}
+	fmt.Println("Closing the Client Connection")
+	conn.Close()
+
 }
 
 func allClientSend(ch_msg chan string, l *list.List) {
@@ -42,7 +67,7 @@ func allClientSend(ch_msg chan string, l *list.List) {
 		msg := <-ch_msg
 		for val := l.Front(); val != nil; val = val.Next() {
 			client := val.Value.(ClientProp)
-			//fmt.Println(client.Name)
+			Log("send-> " + msg)
 			client.Conn.Write([]byte(msg))
 		}
 	}
@@ -59,11 +84,10 @@ func main() {
 	go allClientSend(ch_msg, client_list)
 
 	for {
-		fmt.Println("Wait for client.")
+		fmt.Println("Server Wait for the client to connect.")
 		conn, err := netlisten.Accept()
 		errorCheck(err, "Accept Failed")
 
-		fmt.Println("Client connected.")
 		go clientHandler(conn, ch_msg, client_list)
 	}
 

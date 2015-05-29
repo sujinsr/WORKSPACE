@@ -16,6 +16,10 @@ func errorCheck(err error, errStr string) {
 }
 
 func clientSender(conn net.Conn) {
+	fmt.Print("Enter Your Name : ")
+	/*reader := bufio.NewReader(os.Stdin)
+	name, _ := reader.ReadBytes('\n')
+	conn.Write(name[:len(name)-1])*/
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		message, _ := reader.ReadBytes('\n')
@@ -29,7 +33,7 @@ func clientReceiver(conn net.Conn) {
 	for {
 		_, err := conn.Read(message)
 		errorCheck(err, "Read error")
-		fmt.Println("-------------------------------$", string(message))
+		fmt.Println("[$", string(message))
 	}
 }
 
